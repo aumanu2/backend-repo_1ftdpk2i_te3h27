@@ -1,48 +1,33 @@
 """
-Database Schemas
+Database Schemas for MANGESTIC CTF
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Define MongoDB collection schemas using Pydantic models.
+Each model name maps to a collection with the lowercase name.
+- User -> "user"
+- Challenge -> "challenge"
+- Solve -> "solve"
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional
-
-# Example schemas (replace with your own):
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List
 
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    username: str = Field(..., description="Unique handle shown on leaderboard")
+    email: EmailStr
+    password_hash: str = Field(..., description="SHA256 password hash with salt")
+    bio: Optional[str] = Field(None, description="Short profile bio")
+    avatar_url: Optional[str] = Field(None, description="Profile avatar URL")
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class Challenge(BaseModel):
+    title: str = Field(..., description="Challenge title")
+    description: str = Field(..., description="Markdown/HTML safe description")
+    flag_hash: str = Field(..., description="SHA256 hash of the flag value")
+    points: int = Field(..., ge=0, description="Score awarded for solving")
+    author: str = Field(..., description="Username of the contributor")
+    tags: Optional[List[str]] = Field(default=None, description="Topic tags")
+    is_active: bool = Field(default=True)
 
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Solve(BaseModel):
+    challenge_id: str = Field(..., description="ObjectId of the challenge as string")
+    username: str = Field(..., description="Solver username")
+    points: int = Field(..., ge=0)
